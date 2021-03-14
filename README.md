@@ -9,8 +9,11 @@ wolf3d-readyplayerme-three.js-boilerplate
 ## About
 This starter kit lets you deploy your Wolf3D/ReadyPlayer.Me avatars on your personal webpage using three.js.
 
+This repository is based on: [superguigui/threejs-starter-kit](https://github.com/superguigui/threejs-starter-kit)
+
 ## Demo
-https://egemenertugrul.github.io/about/
+See: https://egemenertugrul.github.io/about/
+[![demo](/demo.gif)](https://egemenertugrul.github.io/about/)
 
 ## Features
 - Deploy [Wolf3D/ReadyPlayer.Me](https://readyplayer.me/) avatars using [three.js](https://threejs.org/)
