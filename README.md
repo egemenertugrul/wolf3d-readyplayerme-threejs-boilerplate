@@ -13,6 +13,7 @@ This repository is based on: [superguigui/threejs-starter-kit](https://github.co
 
 ## Demo
 See: https://egemenertugrul.github.io/about/
+
 [![demo](/demo.gif)](https://egemenertugrul.github.io/about/)
 
 ## Features
