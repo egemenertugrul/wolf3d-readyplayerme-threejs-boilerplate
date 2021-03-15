@@ -1,13 +1,13 @@
 {
-  "name": "Wolf3D ReadyPlayerMe Profile Boilerplate",
+  "name": "Wolf3D ReadyPlayerMe Three.js Boilerplate",
   "version": "1.0.0",
-  "description": "Wolf3D/ReadyPlayer.Me Profile Boilerplate",
+  "description": "Wolf3D ReadyPlayerMe Three.js Boilerplate",
   "main": "src/index.js",
   "scripts": {
     "start": "webpack-dev-server --open",
     "build": "webpack --env.prod"
   },
-  "repository": "egemenertugrul/wolf3d-readyplayerme-profile-boilerplate",
+  "repository": "egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate",
   "author": "Egemen Ertugrul",
   "license": "ISC",
   "devDependencies": {
