@@ -7,7 +7,7 @@ wolf3d-readyplayerme-three.js-boilerplate
   </sup>
 
 ## About
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate/Node.js%20CI) ![GitHub issues](https://img.shields.io/github/issues/egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate) ![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate/three)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate/Node.js%20CI) ![GitHub issues](https://img.shields.io/github/issues/egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate) ![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate/three) ![GitHub](https://img.shields.io/github/license/egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate)
 
 This starter kit lets you deploy your Wolf3D/ReadyPlayer.Me avatars on your personal webpage using three.js.
 
