@@ -9,9 +9,11 @@ wolf3d-readyplayerme-three.js-boilerplate
 ## About
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate/Node.js%20CI) ![GitHub issues](https://img.shields.io/github/issues/egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate) ![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate/three) ![GitHub](https://img.shields.io/github/license/egemenertugrul/wolf3d-readyplayerme-threejs-boilerplate)
 
-This starter kit lets you deploy your Wolf3D/ReadyPlayer.Me avatars on your personal webpage using three.js.
+This starter kit lets you deploy your [Wolf3D/ReadyPlayer.Me](https://readyplayer.me/) avatars on your personal webpage using three.js.
 
 This repository is based on: [superguigui/threejs-starter-kit](https://github.com/superguigui/threejs-starter-kit)
+
+> Special thanks to [Zakir Baytar (@zakirbaytar) ](https://github.com/zakirbaytar) for helping me refactor the code to make it more *human-readable* and maintainable.
 
 ## Demo
 See: https://egemenertugrul.github.io/about/
@@ -54,31 +56,28 @@ if (DEVELOPMENT) {
 ```
 
 ## Configuration
-1) In `index.js`, edit: 
-    - `ASSET_SETTINGS`
-    - `AVATAR_SETTINGS`
-    - `DOM_SETTINGS`
-2) In `index.js`, construct `Avatar` instance with parameters: 
-   - `isTrackCursor` (default: true)
-   - `isAutoAnimated` (default: true)
-   - `isAutoMorphAnimated` (default: true)
-   - `morphTargets`
-   - `defaultAnimation`
-3) In `objects/Avatar.js`, the `morphTargetAnimator.addRange(..)` function takes in the morph target parameters: 
+1) Create your avatar and place the .glb file in `assets/models`.
+2) In `config.js`, edit: 
+    - `defaultAvatar.url`
+    - `AvatarSettings`
+    - `DOMSettings`
+3) In `AvatarSettings.morphTargets`, each element has the properties: 
      -  `key` (string)
      -  `targetValue` [0-1]
      -  `transition` (ms)
      -  `duration` (ms)
-4) When building and deploying through `npm run build`, have a `div` with id `DOM_SETTINGS.avatarDivID` (index.js). E.g.
+4) When building and deploying through `npm run build`, have a `div` with id `DOMSettings.avatarDivID` (config.js). E.g.
    ```html
    <div id="3d_avatar"></div>
    ```
 
-To see available morph targets and animations, view your avatar on: https://gltf-viewer.donmccurdy.com/
+>To see available morph targets and animations, view your avatar on: https://gltf-viewer.donmccurdy.com/
 
 
-## File Structure and coding style
-- "Objects" classes in `src/objects` extend `THREE.Object3D`.
+## File Structure and Coding Style
+- Classes in `src/objects` extend `THREE.Object3D`.
+- Factory pattern is used to create `container`, `renderer`, `scene`, and `camera`.
+- Builder pattern is used to add components to `Scene` and `Avatar`.
 - `THREE` global keyword is avoided.
 - Necessary components are imported from `three`: 
 ```js
@@ -89,21 +88,18 @@ See [superguigui/threejs-starter-kit](https://github.com/superguigui/threejs-sta
 
 - Similar to MonoBehaviour class in Unity development, scene objects can implement `update` function to execute at each frame.
 
-Avatar.js:
+``Avatar.js:``
 ```js
- update(scene, camera, renderer, delta) {
-    this.rotateHead(delta);
+	update(delta) {
+    this.rotateHead();
     this.mixer.update(delta);
   }
 ```
-index.js, render():
+
+``index.js, render():``
 ```js
 ..
-scene.traverse(function(element) {
-    if (element.update != null) {
-        element.update(scene, camera, renderer, mixerUpdateDelta);
-    }
-  })
+scene.main.traverse((element) => element?.update?.(delta));
 ..
 ```
 
