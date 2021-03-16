@@ -1,48 +1,86 @@
-import {
-    Vector2,
-    EventDispatcher
-} from 'three'
+import { Vector2, EventDispatcher } from "three";
+import { remap } from "../utils";
 
 export default class CursorTracker extends EventDispatcher {
-    constructor(element) {
-        super()
-        this.element = element;
-        this.mousePos = new Vector2();
-        document.addEventListener('mousemove', (e) => { this.onDocumentMouseMove(e); }, false);
-        document.addEventListener('mousedown', (e) => { this.onMouseDown(e); }, false);
+  constructor(element) {
+    super();
+    this.element = element;
+    this.lastClientPosition = this.getElementCenterPositionPx();
+    this.mousePosition = this.getCurrentMousePosition();
+
+    document.addEventListener("mousemove", this.onDocumentMouseMove.bind(this));
+    document.addEventListener("scroll", this.onDocumentScroll.bind(this));
+  }
+
+  onDocumentMouseMove(event) {
+    event.preventDefault();
+
+    const { clientX, clientY } = event;
+    this.lastClientPosition = new Vector2(clientX, clientY);
+
+    this.mousePosition = this.getCurrentMousePosition();
+    this.getDeltaToMouse();
+  }
+
+  onDocumentScroll(event) {
+    this.mousePosition = this.getCurrentMousePosition();
+    this.getDeltaToMouse();
+  }
+
+  getCurrentMousePosition() {
+    const { x, y } = this.lastClientPosition;
+    const { scrollX, scrollY, innerWidth, innerHeight } = window;
+
+    const mouseX = ((x + scrollX) / innerWidth) * 2 - 1;
+    const mouseY = -((y + scrollY) / innerHeight) * 2 + 1;
+
+    const mousePosition = new Vector2(mouseX, mouseY);
+    super.dispatchEvent({ type: "mouseposition", data: mousePosition });
+
+    return mousePosition;
+  }
+
+  getDeltaToMouse() {
+    if (!this.mousePosition || !this.element) {
+      return;
     }
 
-    onDocumentMouseMove(event) {
-        event.preventDefault();
-        this.mousePos.x = ((event.clientX + window.scrollX) / window.innerWidth) * 2 - 1;
-        this.mousePos.y = -((event.clientY + window.scrollY) / window.innerHeight) * 2 + 1;
-        
-        this.dispatchEvent( { type: 'mouseposition', data: this.mousePos } );
+    const elementCenterPosition = this.getElementCenterPosition();
+    const deltaToMouse = new Vector2();
+    deltaToMouse.subVectors(this.mousePosition, elementCenterPosition);
+    super.dispatchEvent({ type: "deltaToMouse", data: deltaToMouse });
 
-        if(this.element != null){
-            this.deltaToMouse = this.getDeltaToMouse();
-            this.dispatchEvent( { type: 'deltaToMouse', data: this.deltaToMouse } );
-        }
-    }
+    return deltaToMouse;
+  }
 
-    getDeltaToMouse(){
-        if(!this.mousePos)
-        {
-          return;
-        }
+  getElementCenterPosition() {
+    const elementPos = this.getElementCenterPositionPx();
+    const centerX = remap({
+      value: elementPos.x,
+      low1: 0,
+      low2: -1,
+      high1: window.innerWidth,
+      high2: 1,
+    });
 
-        var rect = this.element.getBoundingClientRect();
-        let position = new Vector2(
-        ((rect.left + window.pageXOffset + (this.element.clientWidth / 2) - (window.innerWidth / 2)) / window.innerWidth) * 2,
-        -((rect.top + window.pageYOffset + (this.element.clientHeight / 2) - (window.innerHeight / 2)) / window.innerHeight) * 2
-        );
+    const centerY = -remap({
+      value: elementPos.y,
+      low1: 0,
+      low2: -1,
+      high1: window.innerHeight,
+      high2: 1,
+    });
 
-        var deltaToMouse = new Vector2();
-        deltaToMouse.subVectors(this.mousePos, position);
-        return deltaToMouse;
-    }
+    return new Vector2(centerX, centerY);
+  }
 
-    onMouseDown(event) {
-        // console.log("mouse position: (" + this.mouse.x + ", " + this.mouse.y + ")");
-    }
+  getElementCenterPositionPx() {
+    const { left, top } = this.element.getBoundingClientRect();
+    const { pageXOffset, pageYOffset } = window;
+
+    return new Vector2(
+      left + pageXOffset + this.element.clientWidth / 2,
+      top + pageYOffset + this.element.clientHeight / 2
+    );
+  }
 }
