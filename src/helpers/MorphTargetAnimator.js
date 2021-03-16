@@ -1,111 +1,80 @@
-import {
-    MathUtils
-} from 'three'
+import { EventEmitter } from "events";
+import { promisify } from "util";
+import { MathUtils } from "three";
 
-import * as TWEEN from 'es6-tween';
+import * as TWEEN from "es6-tween";
+import { shuffle, sleep } from "../utils";
 
-export default class MorphTargetAnimator {
-    constructor(mesh, isAutoAnimated = true) {
-        this.mesh = mesh;
-        this.isAutoAnimated = isAutoAnimated;
-        this.morphTargets = [];
-        TWEEN.autoPlay(true);
+export default class MorphTargetAnimator extends EventEmitter {
+  constructor({ mesh }) {
+    super();
+    this.mesh = mesh;
 
-        // this.autoAnimate(5000, 7000).then(() => console.log("Done!"));
+    this.morphTargets = [];
+    TWEEN.autoPlay(true);
+  }
 
-        this.minInterval = 5000;
-        this.maxInterval = 7000;
+  async animate(key) {
+    return new Promise((resolve, reject) => {
+      const morphTargetParams = this.morphTargets.find((item) => {
+        return item.key === key;
+      });
+      const morphTargetIndex = this.mesh.morphTargetDictionary[key];
 
-        if(isAutoAnimated){
-            setInterval(() => { // TODO: Change to promises
-                this.animateRandom()
-            }, MathUtils.randInt(this.minInterval, this.maxInterval));
-        }
+      if (morphTargetParams) {
+        const { transition, targetValue, duration } = morphTargetParams;
+        const currentValue = {
+          v: this.mesh.morphTargetInfluences[morphTargetIndex],
+        };
+
+        this.tween = new TWEEN.Tween(currentValue)
+          .to({ v: targetValue }, transition)
+          .on("update", () => {
+            this.mesh.morphTargetInfluences[morphTargetIndex] = currentValue.v;
+          })
+          .on("complete", () => {
+            resolve();
+          })
+          .repeat(1)
+          .delay(duration)
+          .yoyo(true)
+          .easing(TWEEN.Easing.Cubic.InOut)
+          .start();
+      }
+    });
+  }
+
+  async autoAnimate({ minInterval, maxInterval }) {
+    const shuffledArray = shuffle(this.morphTargets);
+
+    for (const element of shuffledArray) {
+      await this.animate(element.key);
+      await sleep(MathUtils.randInt(minInterval, maxInterval));
     }
 
-    animate(key) {
-        return new Promise((resolve, reject) => {
-            let morphTargetParams = this.morphTargets.find((item) => {
-                return item.key === key
-            });
-            var morphTargetIndex = this.mesh.morphTargetDictionary[key];
-            
-            if (morphTargetParams) {
-                var currentValue = {
-                    v: this.mesh.morphTargetInfluences[morphTargetIndex]
-                };
-                this.tween = new TWEEN.Tween(currentValue)
-                    .to({
-                        v: morphTargetParams.targetValue
-                    }, morphTargetParams.transition)
-                    .on('update',
-                        () => {
-                            this.mesh.morphTargetInfluences[morphTargetIndex] = currentValue.v;
-                        }
-                    )
-                    .on('complete', () => {
-                        resolve()
-                    })
-                    .repeat(1)
-                    .delay(morphTargetParams.duration)
-                    .yoyo(true)
-                    .easing(TWEEN.Easing.Cubic.InOut)
-                    .start();
-            }
-        })
-    }
+    this.emit("complete");
+  }
 
-    animateRandom() {
-        if(this.morphTargets.length > 0){
-            this.animate(this.getRandomParamKey());
-        }
-    }
+  stop() {
+    this.morphTarget = 0;
+  }
 
-    // async autoAnimate(minInterval, maxInterval) {   
-    //     MathUtils.randInt(minInterval, maxInterval);
-    //     var shuffledArray = this.selectedMorphTargets
-    //         .map((a) => ({
-    //             sort: Math.random(),
-    //             value: a
-    //         }))
-    //         .sort((a, b) => a.sort - b.sort)
-    //         .map((a) => a.value)
+  add({ key, targetValue = 1, transition = 1000, duration = 2000 }) {
+    this.morphTargets.push({ key, targetValue, transition, duration });
+  }
 
-    //     for (const element of shuffledArray) {
-    //         await this.animate(element.key);
-    //     }
+  addRange(morphParams) {
+    morphParams.forEach((morthTarget) => {
+      this.add(morthTarget);
+    });
+  }
 
-    // }
+  getRandomParamKey() {
+    const randomKeyIndex = Math.floor(Math.random() * this.morphTargets.length);
+    return this.morphTargets[randomKeyIndex]?.key;
+  }
 
-    //   stop(){
-    //     this.morphTarget = 0;
-    //   }
-
-    add(key, targetValue = 1, transition = 1000, duration = 2000) {
-        this.morphTargets.push({
-            key: key,
-            targetValue: targetValue,
-            transition: transition,
-            duration: duration
-        })
-    }
-
-    addRange(morphParams) {
-        morphParams.forEach(param => {
-            this.add(
-                param.key,
-                param.targetValue,
-                param.transition,
-                param.duration
-            )
-        });
-    }
-
-    getRandomParamKey() {
-        return this.morphTargets[Math.floor(Math.random() * this.morphTargets.length)].key;
-    }
-
-    remove(key) {
-        this.morphTargets.splice(this.morphTargets.findIndex(item => item.key === key), 1)
-    }
+  remove(key) {
+    this.morphTargets = this.morphTargets.filter((item) => item.key !== key);
+  }
 }
