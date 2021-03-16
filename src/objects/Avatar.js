@@ -1,105 +1,123 @@
-import {
-  AnimationMixer,
-  LoopRepeat,
-  Object3D,
-  Vector3
-} from 'three'
-import {
-  preloader
-} from '../loader'
-import MorphTargetAnimator from '../helpers/MorphTargetAnimator';
-import CursorTracker from '../helpers/CursorTracker';
+import { AnimationMixer, LoopRepeat, Object3D, Vector3 } from "three";
+import { preloader } from "../loader";
 
-export default class Avatar extends Object3D {
-  constructor(renderer, avatarSettings) {
-    super()
+import MorphTargetAnimator from "../helpers/MorphTargetAnimator";
+import CursorTracker from "../helpers/CursorTracker";
+import { AvatarSettings as avatarSettings } from "../config";
+
+export class Avatar extends Object3D {
+  constructor(renderer) {
+    super();
+    this.init(renderer);
+  }
+
+  static createDefault(renderer) {
+    const {
+      isAutoMorphAnimated,
+      isAutoAnimated,
+      defaultAnimation,
+      isTrackCursor,
+      morphTargets,
+    } = avatarSettings;
+
+    const avatar = new Avatar(renderer)
+      .withMorphAnimator()
+      .withMorphTargets(morphTargets);
+
+    if (isAutoMorphAnimated) {
+      avatar.withAutoMorphAnimation();
+    }
+    if (isAutoAnimated) {
+      avatar.withAutoAnimation(defaultAnimation);
+    }
+    if (isTrackCursor) {
+      avatar.withCursorTracking();
+    }
+
+    return avatar;
+  }
+
+  init(renderer) {
     this.renderer = renderer;
-    
-    this.isTrackCursor = avatarSettings.isTrackCursor;
-    this.isAutoAnimated = avatarSettings.isAutoAnimated;
-    this.isAutoMorphAnimated = avatarSettings.isAutoMorphAnimated;
-    
-    if (this.isTrackCursor === undefined) {
-      this.isTrackCursor = true;
-    }
-    if (this.isAutoAnimated === undefined) {
-      this.isAutoAnimated = true;
-    }
-    if (this.isAutoMorphAnimated === undefined) {
-      this.isAutoMorphAnimated = true;
-    }
-
-    /* Set transformation */
+    this.avatar = preloader.get("avatar");
+    this.model = new Proxy(this.avatar.scene, {
+      get: function (model, property) {
+        return property in model
+          ? model[property]
+          : model.getObjectByName(property);
+      },
+    });
+    this.headMesh = this.model.Wolf3D_Head;
     this.position.set(0, 0, 0);
 
-    /* Load avatar model */
     this.mixer = new AnimationMixer(this.model);
-    this.mixer.timeScale = 0.5; // Half-speed animations (not morph animations)
-
-    this.avatar = preloader.get('avatar');
-    this.model = this.avatar.scene;
-
-    this.headMesh = this.model.getObjectByName("Wolf3D_Head");
-
-    this.headBone = this.model.getObjectByName("Head");
-    this.leftEyeBone = this.model.getObjectByName("LeftEye");
-    this.rightEyeBone = this.model.getObjectByName("RightEye");
-
-    /*
-      Set morph target animations
-      To see available morph targets and animations, upload your avatar to: https://gltf-viewer.donmccurdy.com/
-     */
-    this.morphTargetAnimator = new MorphTargetAnimator(this.headMesh, this.isAutoMorphAnimated);
-    
-    if(avatarSettings.morphTargets !== undefined){
-          this.morphTargetAnimator.addRange(avatarSettings.morphTargets);
-    }
-
-    /* 
-    Animations 
-    To see available morph targets and animations, upload your avatar to: https://gltf-viewer.donmccurdy.com/
-    */
-    this.mixer = new AnimationMixer(this.model);
-    this.mixer.timeScale = 0.5; // Half-speed animations (not morph animations)
-
-    if(avatarSettings.defaultAnimation !== undefined){
-      this.animationClip = this.findAnimation(avatarSettings.defaultAnimation);
-    } else {
-      this.animationClip = this.findAnimation("idle_eyes");
-    }
-    
-    if(this.isAutoAnimated){
-      let anim = this.mixer.clipAction(this.animationClip).reset().play();
-      anim.setLoop(LoopRepeat);
-    }
-
-    if (this.isTrackCursor) {
-      /* Cursor tracking setup */
-      const ct = new CursorTracker(this.renderer.domElement);
-      ct.addEventListener('deltaToMouse', (deltaToMouse) => {
-        let deltaToMouseData = deltaToMouse.data.clampScalar(-0.65, 0.65);
-        this.deltaToMouseRotation = new Vector3(-deltaToMouseData.y, deltaToMouseData.x, 0);
-      })
-    }
+    this.mixer.timeScale = 0.5;
 
     this.add(this.model);
   }
 
-  findAnimation(name){
-    return this.avatar.animations.find(anim => {
-      return anim.name === name
+  withRenderer(renderer) {
+    this.renderer = renderer;
+    return this;
+  }
+
+  withMorphAnimator() {
+    this.morphAnimator = new MorphTargetAnimator({ mesh: this.headMesh });
+    return this;
+  }
+
+  withMorphTargets(morphTargets = []) {
+    if (!Array.isArray(morphTargets)) {
+      throw new Error("Morph targets must be given as array!");
+    }
+    this.morphAnimator.addRange(morphTargets);
+    return this;
+  }
+
+  withAutoMorphAnimation(delay = { minInterval: 5000, maxInterval: 7000 }) {
+    this.morphAnimator.on("complete", () => {
+      this.morphAnimator.autoAnimate(delay);
     });
+
+    this.morphAnimator.autoAnimate(delay);
+
+    return this;
+  }
+
+  withAutoAnimation(defaultAnimation = "idle_eyes") {
+    /**
+     * Animations
+     * To see available morph targets and animations, upload your avatar to: https://gltf-viewer.donmccurdy.com/
+     */
+    const animationClip = this._findAnimation(defaultAnimation);
+    this.mixer.clipAction(animationClip).reset().play().setLoop(LoopRepeat);
+    return this;
+  }
+
+  withCursorTracking() {
+    const cursorTracker = new CursorTracker(this.renderer.domElement);
+    cursorTracker.addEventListener("deltaToMouse", (deltaToMouse) => {
+      const { x, y } = deltaToMouse.data.clampScalar(-0.65, 0.65);
+      this.deltaToMouseRotation = new Vector3(-y, x, 0);
+    });
+    return this;
   }
 
   rotateHead() {
     if (!this.deltaToMouseRotation) {
       return;
     }
-    this.headBone.rotation.set(this.deltaToMouseRotation.x, this.deltaToMouseRotation.y, 0);
+
+    const { x, y } = this.deltaToMouseRotation;
+    this.model.Head.rotation.set(x, y, 0);
   }
 
-  update(scene, camera, renderer, delta) {
+  update(delta) {
     this.rotateHead();
     this.mixer.update(delta);
+  }
+
+  _findAnimation(name) {
+    return this.avatar.animations.find((anim) => anim.name === name);
   }
 }
