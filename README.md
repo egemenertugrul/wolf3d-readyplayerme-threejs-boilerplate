@@ -15,8 +15,9 @@ This repository is based on: [superguigui/threejs-starter-kit](https://github.co
 
 > Special thanks to [Zakir Baytar (@zakirbaytar) ](https://github.com/zakirbaytar) for helping me refactor the code to make it more *human-readable* and maintainable.
 
-## Demo
-See: https://egemenertugrul.github.io/about/
+## Demos
+[Demo 1](https://egemenertugrul.github.io/wolf3d-readyplayerme-threejs-boilerplate/)
+[Demo 2](https://egemenertugrul.github.io/about/)
 
 [![demo](/demo.gif)](https://egemenertugrul.github.io/about/)
 
