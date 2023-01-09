@@ -47,7 +47,7 @@ export class Avatar extends Object3D {
           : model.getObjectByName(property);
       },
     });
-    this.headMesh = this.model.Wolf3D_Head;
+    this.headMesh = this.model.Wolf3D_Avatar;
     this.position.set(0, 0, 0);
 
     this.mixer = new AnimationMixer(this.model);

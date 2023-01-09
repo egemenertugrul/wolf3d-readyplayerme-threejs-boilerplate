@@ -1,7 +1,7 @@
 export const defaultAvatar = {
   id: "avatar",
   type: "gltf",
-  url: "assets/models/gordonfreeman.glb",
+  url: "assets/models/test.glb",
 };
 
 // To see available morph targets and animations, view your avatar on: https://gltf-viewer.donmccurdy.com/
