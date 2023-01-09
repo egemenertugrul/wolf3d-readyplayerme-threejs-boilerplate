@@ -1,6 +1,12 @@
 wolf3d-readyplayerme-three.js-boilerplate
 ===================
 
+## Important Update
+
+Please use <a href="https://demo.readyplayer.me/">https://demo.readyplayer.me/</a> to create half-body avatars which are compatible with this project.
+
+<hr/>
+
 ![screenshot](/screenshot.png)
 
 <sup>Grand Canyon by <a href="https://unsplash.com/@jasonlthompson?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Jason Thompson</a> on <a href="/s/photos/great-canyon?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>
